@@ -1,0 +1,22 @@
+{
+  "name": "@oheco/dsh-gpt-image",
+  "version": "0.1.0",
+  "description": "Generate GPT images and return durable image previews and original files in DSH conversations",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/oheco/dsh-gpt-image.git" },
+  "engines": { "node": ">=22.19" },
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": ["index.js", "config.js", "runtime.js", "image-api.js", "tool.js", "cordis.patch.yml", "locale/*.json", "icon.svg", "README.md", "VERIFICATION.md", "LICENSE"],
+  "scripts": {
+    "check": "node --check index.js && node --check config.js && node --check runtime.js && node --check image-api.js && node --check tool.js && node --check scripts/test-native.mjs",
+    "test": "node --test test/*.test.js",
+    "test:native": "node scripts/test-native.mjs"
+  },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}
