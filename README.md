@@ -92,7 +92,7 @@ npm pack --dry-run
 
 原生集成验证需要已安装的 DSH。指定其 JavaScript 入口（不是 shell 启动器），运行 `DSH_RUNTIME_ENTRY=/absolute/path/to/dsh/lib/bin.js npm run test:native`。脚本使用真实 DSH 工具执行器与附件存储、fixture HTTP 响应，在 `$TMPDIR` 创建并清理独立数据目录；无需启动第二个 Web 服务。详见 [验证记录](VERIFICATION.md)。
 
-本机验证环境：HarmonyOS aarch64、Node 24.21.0、DSH 0.2.1-rc.2-ohos.1。2026-10-23 使用现有 CodexManager 凭据测试时，`GET /v1/models` 包含两个 2.5 模型，但两个 `POST /v1/images/generations` 都返回 `permission_error: Image generation is not enabled for this group`。因此当时真实生成被网关组权限阻止；不能将模型目录可见或本地测试通过等同于真实出图成功。
+本机验证环境：HarmonyOS aarch64、Node 24.21.0、DSH 0.2.1-rc.2-ohos.1。2026-10-23 初测被网关组权限拒绝。2026-10-25 开启当前 Sub2API 分组的生图权限后，复用同一凭据，通过插件生产入口、真实 DSH ToolRuntime 和附件存储分别成功生成 Flare、Sunburst 图片，各约 22 秒，均返回 text/image/file 内容块并完成原图和预览读取。测试请求为 1024×1024、low、PNG，网关实际返回的图片均为 1254×1254，插件保留原始字节；请求尺寸与实际输出尺寸的差异属于本次网关观测结果，不能将模型目录可见等同于参数按官方规格执行。
 
 模型、参数及尺寸依据：
 
