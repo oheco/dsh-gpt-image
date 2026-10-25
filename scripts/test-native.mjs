@@ -28,9 +28,17 @@ try {
   credentials.resolve = async ref => { assert.equal(ref, 'FIXTURE_IMAGE_API_KEY'); return { value: 'fixture-key', source: 'test' }; };
   let requests = 0;
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'https://fixture.example/v1/images/generations');
-    assert.equal(options.headers.Authorization, 'Bearer fixture-key');
-    assert.equal(JSON.parse(options.body).model, 'gpt-image-2.5-flare');
+    assert.equal(new Headers(options.headers).get('Authorization'), 'Bearer fixture-key');
+    if (requests === 0) {
+      assert.equal(url, 'https://fixture.example/v1/images/generations');
+      assert.equal(JSON.parse(options.body).model, 'gpt-image-2.5-flare');
+    } else {
+      assert.equal(url, 'https://fixture.example/v1/images/edits');
+      assert.equal(new Headers(options.headers).has('Content-Type'), false);
+      assert.equal(options.body.get('model'), requests === 2 ? 'gpt-image-2.5-flare' : 'gpt-image-2.5-sunburst');
+      assert.deepEqual(Buffer.from(await options.body.get('image').arrayBuffer()), png);
+      if (requests === 3) assert.deepEqual(Buffer.from(await options.body.get('mask').arrayBuffer()), png);
+    }
     requests++;
     return Response.json({ data: [{ b64_json: png.toString('base64') }] });
   };
@@ -45,7 +53,24 @@ try {
   assert.equal(preview.ref.width, 1);
   assert.equal(preview.ref.height, 1);
   assert.deepEqual(Buffer.from(preview.data), png);
-  console.log(JSON.stringify({ verified: true, requests, content: result.content.map(part => part.type), originalBytes: png.length, preview: '1x1', fixture: true }));
+  const edited = await tools.execute({ name: 'edit_image', arguments: { prompt: 'Make the source red', images: [image.original] }, callId: 'native-image-edit', signal: new AbortController().signal });
+  assert.equal(edited.isError, false, JSON.stringify(edited));
+  assert.equal(edited.value.model, 'gpt-image-2.5-sunburst');
+  assert.deepEqual(edited.content.map(part => part.type), ['text', 'image', 'file']);
+  const continued = await tools.execute({ name: 'edit_image', arguments: { prompt: 'Make the source blue', images: [edited.value.images[0].original], model: 'gpt-image-2.5-flare' }, callId: 'native-image-followup', signal: new AbortController().signal });
+  assert.equal(continued.isError, false, JSON.stringify(continued));
+  assert.equal(continued.value.model, 'gpt-image-2.5-flare');
+  assert.equal(requests, 3);
+  assert.deepEqual(await readFile(continued.value.images[0].path), png);
+  const masked = await tools.execute({ name: 'edit_image', arguments: { prompt: 'Edit the masked region', images: [image.original], mask: image.original }, callId: 'native-image-mask', signal: new AbortController().signal });
+  assert.equal(masked.isError, false, JSON.stringify(masked));
+  assert.equal(requests, 4);
+  assert.deepEqual(await readFile(masked.value.images[0].path), png);
+  const editSchema = tools.schemas().find(tool => tool.name === 'edit_image').parameters.properties;
+  assert.ok(editSchema.mask);
+  assert.equal('image_url' in editSchema.images.items.properties, false);
+  assert.equal('file_id' in editSchema.images.items.properties, false);
+  console.log(JSON.stringify({ verified: true, requests, tools: tools.schemas().map(tool => tool.name), content: masked.content.map(part => part.type), originalBytes: png.length, preview: '1x1', maskedMultipart: true, attachmentOnly: true, fixture: true }));
 } finally {
   globalThis.fetch = originalFetch;
   const resolved = await realpath(temp), parent = await realpath(process.env.TMPDIR);

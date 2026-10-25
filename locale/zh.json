@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GPT 图片生成",
-    "description": "使用 GPT Image 2.5 Flare 或 Sunburst 生成图片，在对话中预览并下载原图。"
+    "title": "GPT 图片生成与编辑",
+    "description": "使用 GPT Image 2.5 Flare 或 Sunburst 生成、参考图片和连续编辑，在对话中预览并下载原图。"
   }
 }

@@ -1,5 +1,5 @@
 - insert:
     - id: oheco-gpt-image
-      name: './host.js'
+      name: './upload-host.js'
       config:
         provider: codex-manager
