@@ -5,7 +5,7 @@
 ## 本地检查
 
 - `npm run check`：所有运行文件及原生集成脚本语法检查通过。
-- `npm test`：59 项通过，0 失败、0 取消、0 跳过。覆盖两个模型的请求、参数与尺寸限制、2 MiB 分块图片响应、规范 base64、响应字节上限、错误脱敏、超时/取消、无自动重试、整批验证和附件输出。
+- `npm test`：61 项通过，0 失败、0 取消、0 跳过。覆盖两个模型的请求、参数与尺寸限制、2 MiB 分块图片响应、规范 base64、响应字节上限、错误脱敏、超时/取消、无自动重试、整批验证和附件输出；0.1.1 新增正在并发加载的 Host ESM 模块及 CommonJS 默认导出回归测试。
 - `npm run test:native`：使用安装版 DSH 的真实 Cordis Context、SystemPrompt、ToolRuntime、LocalAttachmentStore 和本插件入口。仅将 HTTP 响应替换为有效 PNG fixture，未调用远端服务。工具执行通过 DSH 参数、输出和内容校验；返回 text/image/file 内容块；原图文件字节一致，预览读取为 1×1；测试存储在 TMPDIR 创建并清理。
 - `npm pack --dry-run`：检查运行文件、配置、bundle patch、中英文 locale、原创 SVG 图标、许可及文档的分发清单。无安装脚本、无下载的构建依赖。
 
@@ -14,6 +14,14 @@
 通过插件管理器从仓库目录安装到 `web` profile。首次导入暴露了链接目录无法直接解析 Host 包的问题，已通过当前 Host Node 入口定位依赖解决；没有修改 DSH 核心。
 
 修复后 `Config.listConfigs` 可读取 `include:oheco-gpt-image` 的完整 schema，`Tool.listTools` 可见 `generate_image`，并在当前会话实际调用成功到达网关。插件管理页显示 `@oheco/dsh-gpt-image` 0.1.0、1 个组件运行中；中文标题、描述、bundle 和组件原创图标已实际查看。英文 locale 资源已检查，英文界面切换未实测。管理器的修复后启用操作曾返回 `restart-required / module-comparison`；随后以实际工具调用和界面运行状态确认了当前能力，而不是从该结果推断热加载成功。未重启用户的 DSH 进程。
+
+### 0.1.1 启动修复与当前会话复验
+
+2026-10-25 再次核查时，发现配置已启用但插件未挂载。管理器诊断为 `ERR_REQUIRE_ESM_RACE_CONDITION`：插件同步 require 凭据 ESM 模块，与 Host 并发 import 冲突。0.1.1 改为先定位 Host 模块，再等待原生动态 import 完成；Schema 保留 CommonJS 默认导出互操作。Host 实现改为独立文件，以 bundle 相对入口加载，包根入口继续兼容既有导入。
+
+修复后语法检查、61 项测试、原生 fixture 工具验证均通过；打包清单包含新增 Host 文件。重新安装过程中管理器仍返回 `restart-required / module-comparison`，本次没有重启 DSH。随后单独读取运行态：插件 `fiberPhase=active`、Config schema 可读取、当前 Agent 的 `generate_image` schema 同时包含两个模型。实际在当前会话直接调用 Flare 成功，原图 PNG 2115107 字节、1254×1254，SHA-256 为 `d778582872bf0cd7ef4d34a5552b27efdcbf83c0e53a57fd322701139638ce59`，返回原生图片预览和文件内容块；此次直接使用 Host 的连接、凭据和 fetch，没有 fixture 或传输替换。这些运行态及调用证据确认当前能力可用，不将管理器结果描述为 `applied`。
+
+图标与 locale 资源未改变，沿用上次展示验收；本次浏览器截图连接超时，未再次截图插件页。Sunburst 已在上文工具 schema 和下文独立 Host 真实请求中验证，本次当前会话直接调用复验选择 Flare。
 
 ## 真实 API
 

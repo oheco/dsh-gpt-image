@@ -14,7 +14,7 @@ DSH Host 插件，向聊天 Agent 提供 `generate_image` 工具，调用 OpenAI
 
 ## 安装
 
-需要带有 tools、attachments、credentials 服务的 DSH，使用现有连接时还需 llm 和 settings 服务。无需构建、npm install、MCP 服务或额外进程；运行时从 DSH 加载 `@deepseek-ai/schemastery` 与 `@deepseek-ai/dsh-credentials`。目录链接安装时使用当前 Host 的 Node 入口定位依赖，无需在仓库内复制或下载 DSH 包。
+需要带有 tools、attachments、credentials 服务的 DSH，使用现有连接时还需 llm 和 settings 服务。无需构建、npm install、MCP 服务或额外进程；运行时异步导入 DSH 的 `@deepseek-ai/schemastery` 与 `@deepseek-ai/dsh-credentials`，等待与 Host 并发的模块加载完成。目录链接安装时使用当前 Host 的 Node 入口定位依赖，无需在仓库内复制或下载 DSH 包。bundle 的相对 Host 入口按其 patch 所在目录解析。
 
 1. 克隆本仓库，或使用已有本地目录。
 2. 在 DSH 的「插件」管理页选择从本地目录安装，输入仓库的绝对路径。例如本机为 `/storage/Users/currentUser/dev/ohos/dsh-gpt-image`。
@@ -30,7 +30,7 @@ DSH Host 插件，向聊天 Agent 提供 `generate_image` 工具，调用 OpenAI
 ```yaml
 - insert:
     - id: oheco-gpt-image
-      name: '@oheco/dsh-gpt-image'
+      name: './host.js'
       config:
         provider: codex-manager
 ```

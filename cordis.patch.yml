@@ -1,5 +1,5 @@
 - insert:
     - id: oheco-gpt-image
-      name: '@oheco/dsh-gpt-image'
+      name: './host.js'
       config:
         provider: codex-manager

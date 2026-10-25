@@ -1,5 +1,5 @@
 import { hostModule } from './runtime.js';
-const Schema = hostModule('@deepseek-ai/schemastery');
+const { default: Schema } = await hostModule('@deepseek-ai/schemastery');
 import { MODELS } from './image-api.js';
 const label = (en, zh) => ({ en, zh });
 export const Config = Schema.object({
