@@ -79,8 +79,8 @@ test('generationURL appends the endpoint and permits HTTP only on loopback', () 
   }
 });
 
-test('both models send exactly one authenticated JSON request with provider options', async t => {
-  assert.deepEqual(MODELS, ['gpt-image-2.5-flare', 'gpt-image-2.5-sunburst']);
+test('all supported models send exactly one authenticated JSON request with provider options', async t => {
+  assert.deepEqual(MODELS, ['gpt-image-2.5-flare', 'gpt-image-2.5-sunburst', 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst']);
   for (const model of MODELS) {
     await t.test(model, async () => {
       let calls = 0;

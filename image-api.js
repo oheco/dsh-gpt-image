@@ -1,4 +1,7 @@
-export const MODELS = ['gpt-image-2.5-flare', 'gpt-image-2.5-sunburst'];
+// Keep defaults stable for existing gateways that may not offer 2.6 yet.
+export const DEFAULT_GENERATION_MODEL = 'gpt-image-2.5-flare';
+export const DEFAULT_EDIT_MODEL = 'gpt-image-2.5-sunburst';
+export const MODELS = [DEFAULT_GENERATION_MODEL, DEFAULT_EDIT_MODEL, 'gpt-image-2.6-flare', 'gpt-image-2.6-sunburst'];
 export const QUALITIES = ['auto', 'low', 'medium', 'high', 'xhigh', 'max'];
 const FORMATS = ['png', 'jpeg', 'webp'];
 
@@ -25,7 +28,7 @@ export function requestBody(args, config) {
   const allowed = ['prompt', 'model', 'n', 'size', 'quality', 'output_format', 'output_compression', 'background'];
   if (Object.keys(args).some(key => !allowed.includes(key))) invalid('Unknown image generation option.');
   if (typeof args.prompt !== 'string' || !args.prompt.trim() || [...args.prompt].length > 32000) invalid('prompt must contain 1–32000 characters.');
-  const model = args.model ?? config.defaultModel ?? MODELS[0];
+  const model = args.model ?? config.defaultModel ?? DEFAULT_GENERATION_MODEL;
   if (!MODELS.includes(model)) invalid(`model must be ${MODELS.join(' or ')}.`);
   const n = args.n ?? 1;
   if (!Number.isInteger(n) || n < 1 || n > (config.maxImages ?? 4)) invalid(`n must be between 1 and ${config.maxImages ?? 4}.`);

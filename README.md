@@ -1,6 +1,6 @@
 # DSH GPT 图片生成与编辑
 
-DSH Host 插件，向普通对话 Agent 提供两个工具，支持 `gpt-image-2.5-flare` 和 `gpt-image-2.5-sunburst`：
+DSH 插件，向普通对话 Agent 提供两个工具，支持 GPT Image 2.6 和 2.5 的 Flare、Sunburst。网页插件详情中可设置认证方式和两个工具的默认模型：
 
 | 工具 | 接口 | 用途 |
 | --- | --- | --- |
@@ -17,24 +17,14 @@ DSH Host 插件，向普通对话 Agent 提供两个工具，支持 `gpt-image-2
 
 ## 安装和连接配置
 
-需要 tools、attachments、credentials 服务；复用已有连接时还需 llm 和 settings。无需构建、npm install、MCP 或额外进程。运行时从当前 Host 导入框架包，兼容 ESM 命名空间和旧版 helper 的 CommonJS 直接导出。
+需要 DSH 的 tools、attachments、credentials 服务；复用已有连接时还需 llm 和 settings。网页配置按 DSH 0.2.2-rc.3 的设置接口实现。插件无需构建、npm install、MCP 或额外进程。
 
-1. 克隆并保留本仓库目录。
-2. 在 DSH「插件」管理页从目录安装，例如本机 `/storage/Users/currentUser/dev/ohos/dsh-gpt-image`。
-3. 默认复用 `codex-manager` 连接。需要换连接时修改 Cordis 配置中的 `provider`，例如本地 bundle 的[默认配置](cordis.patch.yml)，然后重新加载／安装并核对实际工具生效。
-4. 在主对话或普通子 agent 对话中请求生成、编辑图片。
+1. 克隆并保留本仓库目录，在 DSH「插件」管理页**从目录安装**。已有链接安装可直接更新仓库；需要时重启 DSH，再刷新 Web GUI，以加载新的 Host 模块和网页入口。
+2. 点开**插件 → GPT 图片生成与编辑 → 图片 API 设置**。可以继续**复用已有 DSH 连接**，也可以切换到**独立 Images API**，填写 API 基础地址（例如 `https://api.openai.com/v1`）和凭据引用名。
+3. 分别选择**默认生成模型**和**默认编辑模型**，然后**保存设置**。可选 `gpt-image-2.6-flare`、`gpt-image-2.6-sunburst`，也保留 `gpt-image-2.5-flare`、`gpt-image-2.5-sunburst`。现有配置不自动换连接或升级模型；未配置模型时仍以 2.5 Flare 生成、2.5 Sunburst 编辑。
+4. 独立模式保存设置后，如需输入新 Key，在该页的密码框单独**保存 API Key**；已有凭据或环境变量可直接复用。复用 DSH 连接时，在**设置 → 模型**中管理该连接的认证。保存后的值从下一次图片工具调用起生效；不改变聊天模型。
 
-当前插件管理详情页只有开关和运行状态，**尚无可编辑的连接设置表单或下拉选择器**。`provider` 是 Cordis 配置项，填已有连接的标识；多个 profile 也可在自己的配置层覆盖。默认 bundle 为：
-
-```yaml
-- insert:
-    - id: oheco-gpt-image
-      name: './upload-host.js'
-      config:
-        provider: codex-manager
-```
-
-安装影响当前 profile 的会话。更新时运行中模块可能被缓存，应按管理器提示核对实际 Config、工具 schema 和调用结果，不能仅凭源码或版本清单判断新代码已加载。
+这些设置写入当前 profile，而不是仓库。只读页面或更高优先级覆盖可能拒绝保存；不要把 API Key 填在凭据引用名中。CLI / 非 Web 部署仍可使用 Cordis 的 `provider`、`baseURL`、`apiKeyEnv`、`defaultModel` 和 `defaultEditModel`；[默认 bundle](cordis.patch.yml)复用 `codex-manager`，用户配置层可覆盖它。
 
 ## API 密钥如何选择
 
@@ -64,14 +54,14 @@ timeoutMs: 180000
 maxResponseMiB: 128
 ```
 
-通过 DSH 凭据设置保存 Key，不要写入仓库或 YAML。基础地址应含 `/v1`，插件追加 Images 路径。远程地址要求 HTTPS，只有 loopback 测试允许 HTTP。请求继承 DSH 启动代理和 TLS 设置，不修改全局网络配置。
+Key 写入 DSH 凭据库，不写入插件配置或仓库，也不会回显。凭据引用可被其他连接共享；替换一个共享引用下的 Key 会影响所有使用者。如需为第三方网关单独配置 Key，请为它选一个独立的凭据引用。基础地址应含 `/v1`，插件追加 Images 路径。远程地址要求 HTTPS，只有 loopback 测试允许 HTTP。请求继承 DSH 启动代理和 TLS 设置，不修改全局网络配置。
 
 ## 参数和图片上传
 
 | 参数 | 说明 |
 | --- | --- |
 | `prompt` | 必填，1–32000 个 Unicode 字符 |
-| `model` | Flare 或 Sunburst；分别使用配置的生成／编辑默认值 |
+| `model` | 2.6 或 2.5 的 Flare / Sunburst 完整模型 ID；省略时分别使用配置的生成／编辑默认值 |
 | `n` | 默认 1，最多 `maxImages`；配置默认 4，可设 1–10 |
 | `size` | `auto` 或 `宽x高`，例如 `1024x1024`、`1536x1024` |
 | `quality` | `auto`、`low`、`medium`、`high`、`xhigh`、`max` |
@@ -120,8 +110,8 @@ npm pack --dry-run
 DSH_RUNTIME_ENTRY=/absolute/path/to/dsh/lib/bin.js npm run test:native
 ```
 
-核心测试仅使用 Node 标准库，不访问计费 API。[原生脚本](scripts/test-native.mjs)使用真实 Cordis Context、SystemPrompt、ToolRuntime 和 LocalAttachmentStore，HTTP 为有效 PNG fixture；验证生成、编辑、再次编辑和蒙版上传，临时存储在 `$TMPDIR` 创建并清理。真实网关及 Lead／子 agent 验证见[验证记录](VERIFICATION.md)。
+核心测试仅使用 Node 标准库，不访问计费 API。[原生脚本](scripts/test-native.mjs)使用真实 DSH Loader、设置和凭据服务、Client 模块注册表及工具执行器。测试使用 `$TMPDIR` 下的隔离 profile 和 PNG fixture，验证保存设置后切换图片模型与认证、生成、连续编辑和蒙版上传；不启动 Web 服务器。详细范围见[验证记录](VERIFICATION.md)。
 
-官方资料：[Flare](https://developers.openai.com/api/docs/models/gpt-image-2.5-flare)、[Sunburst](https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst)、[Images API](https://developers.openai.com/api/reference/resources/images)、[图像生成指南](https://developers.openai.com/api/docs/guides/image-generation)。
+官方资料：[2.6 Flare](https://developers.openai.com/api/docs/models/gpt-image-2.6-flare)、[2.6 Sunburst](https://developers.openai.com/api/docs/models/gpt-image-2.6-sunburst)、[Images API](https://developers.openai.com/api/reference/resources/images)、[图像生成指南](https://developers.openai.com/api/docs/guides/image-generation)。2.6 在此仅新增两个模型选择，仍沿用插件现有的 PNG/JPEG/WebP 栅格生成及编辑参数；没有开放 2.6 专属的 SVG、GIF、复杂度等参数。
 
 原创图标和代码采用 MIT 许可；GPT/OpenAI 名称用于说明 API 兼容性。

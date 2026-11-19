@@ -1,4 +1,4 @@
-import { ImageError, requestBody } from './image-api.js';
+import { DEFAULT_EDIT_MODEL, ImageError, requestBody } from './image-api.js';
 
 export const MAX_INPUT_IMAGES = 16;
 const invalid = message => { throw new ImageError('INVALID_ARGUMENT', message); };
@@ -9,7 +9,7 @@ const limitBytes = config => (config.maxInputMiB ?? 50) * 1024 * 1024;
 export function editArguments(args, config) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) invalid('Expected an object.');
   const { images, ...options } = args;
-  const body = requestBody(options, { ...config, defaultModel: config.defaultEditModel ?? 'gpt-image-2.5-sunburst' });
+  const body = requestBody(options, { ...config, defaultModel: config.defaultEditModel ?? DEFAULT_EDIT_MODEL });
   if (!Array.isArray(images) || images.length < 1 || images.length > MAX_INPUT_IMAGES) invalid('images must contain 1–16 DSH attachment references.');
   let declaredBytes = 0;
   for (const ref of images) {

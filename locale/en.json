@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "GPT Image Generation and Editing",
-    "description": "Generate, reference and iteratively edit images with GPT Image 2.5 Flare or Sunburst, with conversation previews and downloadable originals."
+    "title": "GPT Image generation and editing",
+    "description": "Generate and edit images with GPT Image 2.6 or 2.5 Flare and Sunburst. Set the API connection and default image models here; preview and download originals in chat."
   }
 }

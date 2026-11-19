@@ -22,7 +22,7 @@ export function createUploadEditTool(options) {
       ...base.parameters,
       properties: {
         ...base.parameters.properties,
-        model: { ...base.parameters.properties.model, description: 'Optional override; otherwise uses the configured edit model (default Sunburst).' },
+        model: { ...base.parameters.properties.model, description: 'Optional model override; otherwise uses the configured default editing model.' },
         images: { type: 'array', minItems: 1, maxItems: 16, items: attachment, description: '1–16 complete DSH source attachments. For lossless followup edits copy images[].original from the newest result. Complete uploaded/read image refs also work. Original bytes are uploaded to the Images edit API.' },
         mask: { ...attachment, description: 'Optional PNG alpha mask attachment matching the first source image dimensions. Transparent regions indicate where to edit; other pixels may still change. Uploaded with the original image bytes.' },
       },
@@ -31,10 +31,12 @@ export function createUploadEditTool(options) {
     async execute(args, exec) {
       const signal = options.signal ? AbortSignal.any([exec.signal, options.signal]) : exec.signal;
       signal.throwIfAborted();
-      const parsed = uploadArguments(args, options.config);
-      const inputs = await readUploadInputs({ ...parsed, attachments: options.attachments, config: options.config, signal });
+      const config = options.getConfig ? options.getConfig() : options.config;
+      const parsed = uploadArguments(args, config);
+      const inputs = await readUploadInputs({ ...parsed, attachments: options.attachments, config, signal });
       signal.throwIfAborted();
-      const operation = createGenerateTool({ ...options, signal: undefined, fetchImpl: createUploadTransport(inputs, options.fetchImpl) });
+      // Keep the chosen endpoint, credential reference and model together for this edit.
+      const operation = createGenerateTool({ ...options, config, getConfig: undefined, signal: undefined, fetchImpl: createUploadTransport(inputs, options.fetchImpl) });
       return operation.execute(parsed.body, { ...exec, signal });
     },
   };

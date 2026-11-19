@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { generateImages, MODELS, QUALITIES } from './image-api.js';
 
-export function createGenerateTool({ config, attachments, resolveConnection, signal: pluginSignal, fetchImpl }) {
+export function createGenerateTool({ config, getConfig = () => config, attachments, resolveConnection, signal: pluginSignal, fetchImpl }) {
   return {
     name: 'generate_image',
     description: 'Generate images from a text prompt with GPT Image. Returns visible image previews and downloadable original files. Calls the configured image API and may incur charges; failed calls are not retried automatically.',
@@ -34,8 +34,9 @@ export function createGenerateTool({ config, attachments, resolveConnection, sig
     async execute(args, exec) {
       const signal = pluginSignal ? AbortSignal.any([exec.signal, pluginSignal]) : exec.signal;
       signal.throwIfAborted();
-      const connection = await resolveConnection();
-      const result = await generateImages({ config: { ...config, baseURL: connection.baseURL }, args, apiKey: connection.apiKey, signal, fetchImpl });
+      const current = getConfig();
+      const connection = await resolveConnection(current);
+      const result = await generateImages({ config: { ...current, baseURL: connection.baseURL }, args, apiKey: connection.apiKey, signal, fetchImpl });
       signal.throwIfAborted();
       const batch = randomUUID();
       const inputs = result.images.map((image, i) => ({ data: image.data, mediaType: image.mediaType, name: `${result.model}-${batch}-${i + 1}.${image.extension}` }));

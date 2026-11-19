@@ -1,6 +1,6 @@
 import { hostModule } from './runtime.js';
 const { credentialRef } = await hostModule('@deepseek-ai/dsh-credentials');
-import { Config } from './image-config.js';
+import { Config, readImageConfig } from './image-config.js';
 import { createGenerateTool } from './tool.js';
 import { createUploadEditTool } from './upload-edit-tool.js';
 import { ImageError, generationURL } from './image-api.js';
@@ -11,7 +11,7 @@ export const inject = ['tools', 'attachments', 'credentials'];
 export function apply(ctx, config = Config({})) {
   const controller = new AbortController();
   ctx.effect(() => () => controller.abort());
-  const resolveConnection = async () => {
+  const resolveConnection = async config => {
     let baseURL = config.baseURL, apiKeyEnv = config.apiKeyEnv;
     if (config.provider) {
       const llm = ctx.get('llm'), settings = ctx.get('settings');
@@ -27,10 +27,13 @@ export function apply(ctx, config = Config({})) {
       baseURL = profile.baseURL; apiKeyEnv = profile.apiKeyEnv;
     }
     generationURL(baseURL);
-    const apiKey = (await ctx.credentials.resolve(credentialRef(apiKeyEnv)))?.value;
+    let ref;
+    try { ref = credentialRef(apiKeyEnv); }
+    catch { throw new ImageError('INVALID_CREDENTIAL_REFERENCE', 'Configure a credential reference name, not an API key, in the connection settings.'); }
+    const apiKey = (await ctx.credentials.resolve(ref))?.value;
     return { baseURL, apiKey };
   };
-  const options = { config, attachments: ctx.attachments, resolveConnection, signal: controller.signal };
+  const options = { config, getConfig: () => readImageConfig(config), attachments: ctx.attachments, resolveConnection, signal: controller.signal };
   ctx.effect(() => ctx.tools.register(createGenerateTool(options)));
   ctx.effect(() => ctx.tools.register(createUploadEditTool(options)));
 }

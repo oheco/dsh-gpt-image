@@ -1,5 +1,15 @@
 # 验证记录
 
+## 0.4.0 — 插件页设置与 GPT Image 2.6
+
+环境：2026-11-19（Asia/Shanghai），HarmonyOS aarch64、Node 24.21.0、DSH 0.2.2-rc.3-ohos.1。
+
+- `npm run check`、`npm test`（201 项）、`npm pack --dry-run`（含 Client 入口，共 24 个文件）通过。
+- [原生集成测试](scripts/test-native.mjs)通过。真实 DSH Loader 挂载 Host 入口，ClientModuleRegistry 从包清单发现 Client 入口并在不启动服务器的情况下提供其内容。Node 测试核对两个配置槽位、共享表单和中英文文案键。
+- 隔离 profile 中，真实 Settings / ConfigEditor 写入模型、地址和凭据引用；拒绝不合法模型和过期版本的写入。原 Host 实例未重载。轮换 DSH 凭据未更改 profile 配置，下一次请求使用新值。
+- 6 次 mock HTTP 请求覆盖兼容默认值、迁移到 2.6 生成与编辑、按次覆盖、图片及蒙版上传、切换到复用 DSH 连接。未调用实际计费 API，未验证账号或第三方网关是否授权 2.6。
+- 未重启或修改运行中的用户 profile；未验证新版在已登录 Web GUI 中的实际渲染与交互。
+
 ## 0.3.0 — 图片附件与蒙版上传
 
 日期：2026-10-25（Asia/Shanghai）。环境：HarmonyOS aarch64、Node 24.21.0、DSH 0.2.1-rc.2-ohos.1。范围是两个 Images 工具，不注册图片模型 LLM 路由；源图和蒙版通过 DSH 附件读取并正常上传。
